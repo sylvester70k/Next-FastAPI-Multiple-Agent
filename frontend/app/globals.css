@@ -105,9 +105,21 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --color-sidebar: oklch(21.03% 0.006 285.89);
+  --color-sidebar-foreground: oklch(0.985 0 0);
+  --color-sidebar-primary: oklch(0.488 0.243 264.376);
+  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar-accent: oklch(0.269 0 0);
+  --color-sidebar-accent-foreground: oklch(0.985 0 0);
+  --color-sidebar-border: oklch(0.269 0 0);
+  --color-sidebar-ring: oklch(0.439 0 0);
+
   /* Radius Tokens */
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
   --radius-xl: var(--radius-xl);
+
+  --background-image-btn-shadow: linear-gradient(180deg, #454449 0%, rgba(69, 68, 73, 0) 100%), linear-gradient(0deg, #2C2B30, #2C2B30);
+  --background-image-input-box: linear-gradient(180deg, #DFDFDF 0%, #BFBFBF 100%);
 }

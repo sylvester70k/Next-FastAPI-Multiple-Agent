@@ -1,13 +1,8 @@
 "use client";
-
-import { Suspense } from "react";
-
-import Home from "@/components/home";
+import Dashboard from "@/components/dashboard";
 
 export default function Page() {
   return (
-    <Suspense fallback={<></>}>
-      <Home />
-    </Suspense>
+    <Dashboard />
   );
 }
