@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/providers";
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: "II-Agent",
@@ -15,6 +16,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <Script id="markdown-it-fix" strategy="beforeInteractive">
+          {`
+            if (typeof window !== 'undefined' && typeof window.isSpace === 'undefined') {
+              window.isSpace = function(code) {
+                return code === 0x20 || code === 0x09 || code === 0x0A || code === 0x0B || code === 0x0C || code === 0x0D;
+              };
+            }
+          `}
+        </Script>
         <link
           rel="apple-touch-icon"
           sizes="180x180"

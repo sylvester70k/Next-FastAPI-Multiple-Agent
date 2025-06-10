@@ -113,4 +113,45 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
+
+  /* Signin Page Custom Styles */
+  .bg-box-bg {
+    background-color: var(--color-box-bg);
+  }
+
+  .border-box-border {
+    border-color: var(--color-box-border);
+  }
+
+  .text-box-fontSub {
+    color: var(--color-box-fontSub);
+  }
+
+  .text-box-placeholder {
+    color: var(--color-box-placeholder);
+  }
+
+  .shadow-signin {
+    box-shadow: var(--box-shadow-signin);
+  }
+
+  .shadow-input {
+    box-shadow: var(--box-shadow-input);
+  }
+
+  .shadow-btn-signin {
+    box-shadow: var(--box-shadow-btn-signin);
+  }
+
+  .shadow-btn-google {
+    box-shadow: var(--box-shadow-btn-google);
+  }
+
+  .bg-btn-signin {
+    background-image: var(--background-image-btn-signin);
+  }
+
+  .backdrop-blur-signin {
+    backdrop-filter: blur(var(--backdrop-blur-btn-signin));
+  }
 }

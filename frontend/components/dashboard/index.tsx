@@ -1,8 +1,11 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import ShadowBtn from "../echat/ShadowBtn";
 import { ArrowUp } from "lucide-react";
 
 const Dashboard = () => {
+    const router = useRouter();
+    
     return (
         <div className="w-screen h-screen flex flex-col">
             <div className="w-full flex justify-between items-center p-3">
@@ -13,6 +16,9 @@ const Dashboard = () => {
                 <ShadowBtn
                     className="text-lg"
                     mainClassName="py-1 px-3"
+                    onClick={() => {
+                        router.push("/signin");
+                    }}
                 >
                     SignIn
                 </ShadowBtn>
@@ -29,15 +35,17 @@ const Dashboard = () => {
                                 className="flex items-center rounded-lg border border-border bg-sidebar backdrop-blur px-4 py-2 shadow-lg transition-all duration-200 hover:border-secondary/50 focus-within:border-secondary/50 focus-within:shadow-[0_0_15px_rgba(var(--secondary),0.3)]"
                             >
                                 <input 
-                                    placeholder="Ask Ultron to..." 
+                                    placeholder="Ask Ryxen to..." 
                                     className="flex-1 h-12 md:h-14 rounded-full bg-transparent focus:outline-none text-[14px]" 
                                     type="text"
                                 />
                                 <button 
-                                    type="submit" 
+                                    type="button"
                                     className="cursor-pointer rounded-md w-9 h-9 flex items-center justify-center transition-all duration-200 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] bg-gradient-to-b from-[#DFDFDF9c] to-[#BFBFBF9c] text-[#0E0E109c]" 
-                                    disabled
                                     aria-label="Submit"
+                                    onClick={() => {
+                                        router.push("/signin");
+                                    }}
                                 >
                                     <ArrowUp />
                                 </button>

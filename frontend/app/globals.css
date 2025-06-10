@@ -113,6 +113,7 @@
   --color-sidebar-accent-foreground: oklch(0.985 0 0);
   --color-sidebar-border: oklch(0.269 0 0);
   --color-sidebar-ring: oklch(0.439 0 0);
+  --color-inputBg: #0D0D0D;
 
   /* Radius Tokens */
   --radius-sm: var(--radius-sm);
@@ -122,4 +123,351 @@
 
   --background-image-btn-shadow: linear-gradient(180deg, #454449 0%, rgba(69, 68, 73, 0) 100%), linear-gradient(0deg, #2C2B30, #2C2B30);
   --background-image-input-box: linear-gradient(180deg, #DFDFDF 0%, #BFBFBF 100%);
+  --background-image-btn-signin: linear-gradient(180deg, #FFFFFF 0%, #999999 100%);
+  --background-image-btn-new-chat: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(0deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
+  --background-image-radial-white: radial-gradient(circle at top left, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
+
+  --box-shadow-signin: 0px 22px 28.4px 0px rgba(0, 0, 0, 0.25);
+  --box-shadow-input: 0px 0px 7.3px 0px rgba(0, 0, 0, 0.53) inset;
+  --box-shadow-btn-signin: 0px 19px 21.5px 0px rgba(0, 0, 0, 0.42);
+  --box-shadow-btn-google: 0px 4px 6.7px -1px rgba(0, 0, 0, 0.25);
+  --box-shadow-input-box: 0px 10px 18px -7px rgba(0, 0, 0, 0.25);
+
+  --backdrop-blur-btn-signin: 9.6px;
+
+  /* Custom Colors for signin page */
+  --color-box-bg: #1a1a1d;
+  --color-box-border: #2c2b30;
+  --color-box-fontSub: #808080;
+  --color-box-placeholder: #b0b0b0;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  border: 1px solid white;
+  -webkit-text-fill-color: white;
+  -webkit-box-shadow: 0px 0px 7.3px 0px #00000087 inset;
+  transition: background-color 5000s ease-in-out 0s;
+  background-color: #0B0B0D;
+  color: white;
+}
+
+.answer-markdown {
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: left;
+    margin-top: 1rem; 
+  }
+
+  a {
+    text-decoration: none;
+    color: hsl(221.2 83.2% 53.3%);
+    text-align: left;
+  }
+
+  code {
+    background-color: rgba(17, 24, 39, 1);
+    ;
+    border-radius: calc(var(--radius) - 2px);
+    font-size: 0.875em;
+    font-weight: 500;
+    text-align: left;
+    padding: 0.15rem 0.3rem;
+  }
+
+  h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-align: left;
+    margin-top: 1rem;
+  }
+
+  p {
+    font-size: 1rem;
+    text-align: left;
+    font-weight: 350;
+  }
+
+  p>strong {
+    font-size: 1.25rem;
+    text-align: left;
+    font-weight: 800;
+  }
+
+  ol {
+    padding-left: 1.25em;
+    text-align: left;
+    margin-top: 0;
+  }
+
+  li {
+    padding-left: 0.375em;
+    margin-bottom: 0.5em;
+    text-align: left;
+    margin-top: 0.5em;
+  }
+
+  ul {
+    text-align: left;
+    padding-left: 1.25em;
+  }
+
+  menu,
+  ol,
+  ul {
+    list-style: none;
+    list-style-type: disc;
+    text-align: left;
+    margin-bottom: 1.25em;
+  }
+
+  hr {
+    border-top-width: 1px;
+    margin-bottom: 3em;
+    text-align: left;
+    margin-top: 3em;
+  }
+
+  strong {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  table {
+    text-indent: 0;
+    font-size: .875em;
+    width: 100%;
+    text-align: left;
+    border-spacing: 0;
+    border-collapse: separate;
+    text-align: left;
+    border-radius: .375rem;
+  }
+
+  thead tr th {
+    border-color: #FFFFFF33;
+    border-left-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    background-color: rgba(17, 24, 39, 0.7);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-weight: 600;
+    text-align: center;
+    text-align: left;
+    font-weight: bold;
+  }
+
+  thead tr th:first-child {
+    text-align: left;
+    border-top-left-radius: .375rem;
+  }
+
+  thead tr th:last-child {
+    border-top-right-radius: .375rem;
+    text-align: left;
+    border-right-width: 1px;
+  }
+
+  tbody tr td {
+    background-color: rgba(17, 24, 39, 1);
+    border-color: #FFFFFF33;
+    border-left-width: 1px;
+    border-bottom-width: 1px;
+    text-align: left;
+    padding: .5rem .75rem;
+  }
+
+  tbody tr td:last-child {
+    border-right-width: 1px;
+    text-align: left;
+    padding-right: .75rem;
+  }
+
+  tbody tr:last-child td:first-child {
+    text-align: left;
+    border-bottom-left-radius: .375rem;
+  }
+
+  tbody tr:last-child td:last-child {
+    text-align: left;
+    border-bottom-right-radius: .375rem;
+  }
+}
+
+@media (width < 40rem) {
+  .answer-markdown {
+    a {
+      text-decoration: none;
+      color: hsl(221.2 83.2% 53.3%);
+      text-align: left;
+    }
+
+    code {
+      background-color: rgba(17, 24, 39, 1);
+      ;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      padding: 0.05rem 0.15rem;
+    }
+
+    h3 {
+      font-size: 1em;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+      text-align: left;
+      margin-top: 0.5rem;
+    }
+
+    p {
+      font-size: 14px;
+      text-align: left;
+      font-weight: 350;
+    }
+
+    p>strong {
+      font-size: 1em;
+      text-align: left;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    ol {
+      padding-left: 0.5em;
+      text-align: left;
+      margin-top: 0;
+      font-size: 14px;
+    }
+
+    li {
+      padding-left: 0.375em;
+      margin-bottom: 0.2em;
+      text-align: left;
+      margin-top: 0.2em;
+      font-size: 14px;
+    }
+
+    ul {
+      text-align: left;
+      padding-left: 0.5em;
+      font-size: 14px;
+    }
+
+    menu,
+    ol,
+    ul {
+      list-style: none;
+      list-style-type: disc;
+      text-align: left;
+      margin-bottom: 0.5em;
+      font-size: 14px;
+    }
+
+    hr {
+      border-top-width: 1px;
+      margin-bottom: 1em;
+      text-align: left;
+      margin-top: 1em;
+    }
+
+    strong {
+      font-size: 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    table {
+      text-indent: 0;
+      font-size: 14px;
+      width: 100%;
+      text-align: left;
+      border-spacing: 0;
+      border-collapse: separate;
+      text-align: left;
+      border-radius: 0.2rem;
+    }
+
+    thead tr th {
+      border-color: #FFFFFF33;
+      border-left-width: 1px;
+      border-top-width: 1px;
+      border-bottom-width: 1px;
+      background-color: rgba(17, 24, 39, 0.7);
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+      text-align: center;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    thead tr th:first-child {
+      text-align: left;
+      border-top-left-radius: 0.2rem;
+    }
+
+    thead tr th:last-child {
+      border-top-right-radius: 0.2rem;
+      text-align: left;
+      border-right-width: 1px;
+    }
+
+    tbody tr td {
+      background-color: rgba(17, 24, 39, 1);
+      border-color: #FFFFFF33;
+      border-left-width: 1px;
+      border-bottom-width: 1px;
+      text-align: left;
+      padding: 0.25rem 0.5rem;
+    }
+
+    tbody tr td:last-child {
+      border-right-width: 1px;
+      text-align: left;
+      padding-right: 0.5rem;
+    }
+
+    tbody tr:last-child td:first-child {
+      text-align: left;
+      border-bottom-left-radius: 0.2rem;
+    }
+
+    tbody tr:last-child td:last-child {
+      text-align: left;
+      border-bottom-right-radius: 0.2rem;
+    }
+  }
 }

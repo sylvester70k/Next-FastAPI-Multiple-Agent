@@ -110,7 +110,7 @@ export default function Home() {
       setIsLoadingSession(true);
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${id}/events`
+          `${process.env.NEXTAUTH_URL}/api/sessions/${id}/events`
         );
 
         if (!response.ok) {
@@ -480,7 +480,7 @@ export default function Home() {
 
               // Upload the file
               const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/upload`,
+                `${process.env.NEXTAUTH_URL}/api/upload`,
                 {
                   method: "POST",
                   headers: {
