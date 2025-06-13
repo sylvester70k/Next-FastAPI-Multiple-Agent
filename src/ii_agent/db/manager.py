@@ -2,50 +2,45 @@ from contextlib import contextmanager
 from typing import Optional, Generator
 import uuid
 from pathlib import Path
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session as DBSession
-from ii_agent.db.models import Base, Session, Event
+from mongoengine import DoesNotExist
+from ii_agent.db.models import Session, Event, init_db
 from ii_agent.core.event import EventType, RealtimeEvent
+import os
 
 
 class DatabaseManager:
     """Manager class for database operations."""
 
-    def __init__(self, db_path: str = "events.db"):
+    def __init__(self, mongodb_url: str = None):
         """Initialize the database manager.
 
         Args:
-            db_path: Path to the SQLite database file
+            mongodb_url: MongoDB connection URL
         """
-        self.engine = create_engine(f"sqlite:///{db_path}")
-        self.SessionFactory = sessionmaker(bind=self.engine)
-
-        # Create tables if they don't exist
-        Base.metadata.create_all(self.engine)
+        if mongodb_url is None:
+            mongodb_url = os.getenv('MONGODB_URL', 'mongodb://localhost:27017/ii_agent')
+        
+        # Initialize MongoDB connection
+        init_db(mongodb_url)
 
     @contextmanager
-    def get_session(self) -> Generator[DBSession, None, None]:
-        """Get a database session as a context manager.
-
-        Yields:
-            A database session that will be automatically committed or rolled back
+    def get_session(self) -> Generator[None, None, None]:
+        """Context manager for database operations.
+        
+        Note: MongoDB doesn't require explicit session management like SQLAlchemy,
+        but we keep this for compatibility with existing code.
         """
-        session = self.SessionFactory()
         try:
-            yield session
-            session.commit()
+            yield None
         except Exception:
-            session.rollback()
             raise
-        finally:
-            session.close()
 
     def create_session(
         self,
         session_uuid: uuid.UUID,
         workspace_path: Path,
         device_id: Optional[str] = None,
-    ) -> None:
+    ) -> tuple[uuid.UUID, Path]:
         """Create a new session with a UUID-based workspace directory.
 
         Args:
@@ -56,14 +51,13 @@ class DatabaseManager:
         Returns:
             A tuple of (session_uuid, workspace_path)
         """
-
         # Create session in database
-        with self.get_session() as session:
-            db_session = Session(
-                id=session_uuid, workspace_dir=str(workspace_path), device_id=device_id
-            )
-            session.add(db_session)
-            session.flush()  # This will populate the id field
+        db_session = Session(
+            id=session_uuid, 
+            workspace_dir=str(workspace_path), 
+            device_id=device_id
+        )
+        db_session.save()
 
         return session_uuid, workspace_path
 
@@ -77,15 +71,13 @@ class DatabaseManager:
         Returns:
             The UUID of the created event
         """
-        with self.get_session() as session:
-            db_event = Event(
-                session_id=session_id,
-                event_type=event.type.value,
-                event_payload=event.model_dump(),
-            )
-            session.add(db_event)
-            session.flush()  # This will populate the id field
-            return uuid.UUID(db_event.id)
+        db_event = Event(
+            session_id=session_id,
+            event_type=event.type.value,
+            event_payload=event.model_dump(),
+        )
+        db_event.save()
+        return uuid.UUID(db_event.id)
 
     def get_session_events(self, session_id: uuid.UUID) -> list[Event]:
         """Get all events for a session.
@@ -96,10 +88,7 @@ class DatabaseManager:
         Returns:
             A list of events for the session
         """
-        with self.get_session() as session:
-            return (
-                session.query(Event).filter(Event.session_id == str(session_id)).all()
-            )
+        return list(Event.objects(session_id=str(session_id)).order_by('timestamp'))
 
     def get_session_by_workspace(self, workspace_dir: str) -> Optional[Session]:
         """Get a session by its workspace directory.
@@ -110,12 +99,10 @@ class DatabaseManager:
         Returns:
             The session if found, None otherwise
         """
-        with self.get_session() as session:
-            return (
-                session.query(Session)
-                .filter(Session.workspace_dir == workspace_dir)
-                .first()
-            )
+        try:
+            return Session.objects(workspace_dir=workspace_dir).first()
+        except DoesNotExist:
+            return None
 
     def get_session_by_id(self, session_id: uuid.UUID) -> Optional[Session]:
         """Get a session by its UUID.
@@ -126,8 +113,10 @@ class DatabaseManager:
         Returns:
             The session if found, None otherwise
         """
-        with self.get_session() as session:
-            return session.query(Session).filter(Session.id == str(session_id)).first()
+        try:
+            return Session.objects(id=str(session_id)).first()
+        except DoesNotExist:
+            return None
 
     def get_session_by_device_id(self, device_id: str) -> Optional[Session]:
         """Get a session by its device ID.
@@ -138,8 +127,10 @@ class DatabaseManager:
         Returns:
             The session if found, None otherwise
         """
-        with self.get_session() as session:
-            return session.query(Session).filter(Session.device_id == device_id).first()
+        try:
+            return Session.objects(device_id=device_id).first()
+        except DoesNotExist:
+            return None
 
     def delete_session_events(self, session_id: uuid.UUID) -> None:
         """Delete all events for a session.
@@ -147,8 +138,7 @@ class DatabaseManager:
         Args:
             session_id: The UUID of the session to delete events for
         """
-        with self.get_session() as session:
-            session.query(Event).filter(Event.session_id == str(session_id)).delete()
+        Event.objects(session_id=str(session_id)).delete()
 
     def delete_events_from_last_to_user_message(self, session_id: uuid.UUID) -> None:
         """Delete events from the most recent event backwards to the last user message (inclusive).
@@ -156,26 +146,18 @@ class DatabaseManager:
         Args:
             session_id: The UUID of the session to delete events for
         """
-        with self.get_session() as session:
-            # Find the last user message event
-            last_user_event = (
-                session.query(Event)
-                .filter(
-                    Event.session_id == str(session_id),
-                    Event.event_type == EventType.USER_MESSAGE.value
-                )
-                .order_by(Event.timestamp.desc())
-                .first()
-            )
+        # Find the last user message event
+        last_user_event = Event.objects(
+            session_id=str(session_id),
+            event_type=EventType.USER_MESSAGE.value
+        ).order_by('-timestamp').first()
 
-            if last_user_event:
-                # Delete all events after the last user message (inclusive)
-                session.query(Event).filter(
-                    Event.session_id == str(session_id),
-                    Event.timestamp >= last_user_event.timestamp
-                ).delete()
-            else:
-                # If no user message found, delete all events
-                session.query(Event).filter(
-                    Event.session_id == str(session_id)
-                ).delete()
+        if last_user_event:
+            # Delete all events after and including the last user message
+            Event.objects(
+                session_id=str(session_id),
+                timestamp__gte=last_user_event.timestamp
+            ).delete()
+        else:
+            # If no user message found, delete all events
+            Event.objects(session_id=str(session_id)).delete()

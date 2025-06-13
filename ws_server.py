@@ -31,10 +31,9 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import anyio
 import base64
-from sqlalchemy import asc, text
 
 from ii_agent.core.event import RealtimeEvent, EventType
-from ii_agent.db.models import Event
+from ii_agent.db.models import Session, Event
 from ii_agent.utils.constants import DEFAULT_MODEL, UPLOAD_FOLDER_NAME
 from utils import parse_common_args, create_workspace_manager_for_connection
 from ii_agent.agents.anthropic_fc import AnthropicFC
@@ -743,52 +742,30 @@ async def get_sessions_by_device_id(device_id: str):
         db_manager = DatabaseManager()
 
         # Get all sessions for this device, sorted by created_at descending
-        with db_manager.get_session() as session:
-            # Use raw SQL query to get sessions with their first user message
-            query = text("""
-            SELECT 
-                session.id AS session_id,
-                session.*, 
-                event.id AS first_event_id,
-                event.event_payload AS first_message,
-                event.timestamp AS first_event_time
-            FROM session
-            LEFT JOIN event ON session.id = event.session_id
-            WHERE event.id IN (
-                SELECT e.id
-                FROM event e
-                WHERE e.event_type = "user_message" 
-                AND e.timestamp = (
-                    SELECT MIN(e2.timestamp)
-                    FROM event e2
-                    WHERE e2.session_id = e.session_id
-                    AND e2.event_type = "user_message"
-                )
-            )
-            AND session.device_id = :device_id
-            ORDER BY session.created_at DESC
-            """)
+        sessions_data = []
+        sessions = Session.objects(device_id=device_id).order_by('-created_at')
+        
+        for session in sessions:
+            # Find the first user message for this session
+            first_user_event = Event.objects(
+                session_id=session.id,
+                event_type="user_message"
+            ).order_by('timestamp').first()
+            
+            first_message = ""
+            if first_user_event and first_user_event.event_payload:
+                first_message = first_user_event.event_payload.get("content", {}).get("text", "")
+            
+            session_data = {
+                "id": session.id,
+                "workspace_dir": session.workspace_dir,
+                "created_at": session.created_at,
+                "device_id": session.device_id,
+                "first_message": first_message,
+            }
+            sessions_data.append(session_data)
 
-            # Execute the raw query with parameters
-            result = session.execute(query, {"device_id": device_id})
-
-            # Convert result to a list of dictionaries
-            sessions = []
-            for row in result:
-                session_data = {
-                    "id": row.id,
-                    "workspace_dir": row.workspace_dir,
-                    "created_at": row.created_at,
-                    "device_id": row.device_id,
-                    "first_message": json.loads(row.first_message)
-                    .get("content", {})
-                    .get("text", "")
-                    if row.first_message
-                    else "",
-                }
-                sessions.append(session_data)
-
-            return {"sessions": sessions}
+        return {"sessions": sessions_data}
 
     except Exception as e:
         logger.error(f"Error retrieving sessions: {str(e)}")
@@ -812,29 +789,27 @@ async def get_session_events(session_id: str):
         db_manager = DatabaseManager()
 
         # Get all events for this session, sorted by timestamp ascending
-        with db_manager.get_session() as session:
-            events = (
-                session.query(Event)
-                .filter(Event.session_id == session_id)
-                .order_by(asc(Event.timestamp))
-                .all()
+        events = Event.objects(session_id=session_id).order_by('timestamp')
+        
+        # Get the session to get workspace_dir
+        session = Session.objects(id=session_id).first()
+        workspace_dir = session.workspace_dir if session else ""
+
+        # Convert events to a list of dictionaries
+        event_list = []
+        for e in events:
+            event_list.append(
+                {
+                    "id": e.id,
+                    "session_id": e.session_id,
+                    "timestamp": e.timestamp.isoformat(),
+                    "event_type": e.event_type,
+                    "event_payload": e.event_payload,
+                    "workspace_dir": workspace_dir,
+                }
             )
 
-            # Convert events to a list of dictionaries
-            event_list = []
-            for e in events:
-                event_list.append(
-                    {
-                        "id": e.id,
-                        "session_id": e.session_id,
-                        "timestamp": e.timestamp.isoformat(),
-                        "event_type": e.event_type,
-                        "event_payload": e.event_payload,
-                        "workspace_dir": e.session.workspace_dir,
-                    }
-                )
-
-            return {"events": event_list}
+        return {"events": event_list}
 
     except Exception as e:
         logger.error(f"Error retrieving events: {str(e)}")

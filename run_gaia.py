@@ -15,7 +15,7 @@ import shutil
 from threading import Lock
 import logging
 import pandas as pd
-import sqlalchemy
+from mongoengine import NotUniqueError
 from tqdm import tqdm
 from datasets import load_dataset, Dataset
 from huggingface_hub import snapshot_download
@@ -203,23 +203,22 @@ async def answer_single_question(
     existing_session = db_manager.get_session_by_id(session_id)
     if existing_session:
         logger.info(f"Found existing session {session_id}, removing old events...")
-        with db_manager.get_session() as session:
-            # Delete all events for this session
-            session.query(Event).filter(Event.session_id == str(session_id)).delete()
-            # Delete the session itself
-            session.query(Session).filter(Session.id == str(session_id)).delete()
-            logger.info(f"Removed old session and events for {session_id}")
-            # remove all files in workspace
-            try:
-                shutil.rmtree(workspace_path, ignore_errors=True)
-                workspace_path.mkdir(parents=True, exist_ok=True)
-                logger.info(
-                    f"Cleaned up and recreated workspace directory: {workspace_path}"
-                )
-            except Exception as e:
-                logger.warning(
-                    f"Error during workspace cleanup: {e}. Continuing anyway..."
-                )
+        # Delete all events for this session
+        Event.objects(session_id=str(session_id)).delete()
+        # Delete the session itself
+        existing_session.delete()
+        logger.info(f"Removed old session and events for {session_id}")
+        # remove all files in workspace
+        try:
+            shutil.rmtree(workspace_path, ignore_errors=True)
+            workspace_path.mkdir(parents=True, exist_ok=True)
+            logger.info(
+                f"Cleaned up and recreated workspace directory: {workspace_path}"
+            )
+        except Exception as e:
+            logger.warning(
+                f"Error during workspace cleanup: {e}. Continuing anyway..."
+            )
 
     try:
         db_manager.create_session(
@@ -230,7 +229,7 @@ async def answer_single_question(
         logger.info(
             f"Created new session {session_id} with workspace at {workspace_path}"
         )
-    except sqlalchemy.exc.IntegrityError as e:
+    except NotUniqueError as e:
         logger.error(f"Failed to create session: {e}")
         return
 
