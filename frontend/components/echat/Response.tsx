@@ -694,10 +694,10 @@ const Response = memo((
           </button>
         </div>
         <div className="text-sm text-subFont">
-          Time: {Number(outputTime.toFixed(5))}s
+          Time: {Number(outputTime?.toFixed(5))}s
         </div>
         <div className="text-sm text-subFont">
-          Points: {Number(points.toFixed(2))}
+          Points: {Number(points?.toFixed(2))}
         </div>
         {/* <AnalysisMenu inputToken={inputToken} outputToken={outputToken} inputTime={inputTime} outputTime={outputTime} totalTime={totalTime} /> */}
       </div>

@@ -79,7 +79,7 @@ const Header = () => {
           <div className={`items-center pl-4 h-full hidden sm:flex`}>
             <div className={`mr-2`}>
               <Image
-                src="/image/logo-chat.png"
+                src="/logo.svg"
                 alt="logo"
                 width={100}
                 height={100}
@@ -150,7 +150,7 @@ const Header = () => {
                   </ShadowBtn>
                 </>
               }
-              {
+              {/* {
                 (endPoint[1] === "workers" || endPoint[1] === "subscription") &&
                 <>
                   <ShadowBtn
@@ -159,12 +159,12 @@ const Header = () => {
                     <ProfileIcon />
                   </ShadowBtn>
                 </>
-              }
+              } */}
             </div>
           }
           <div className="flex items-center gap-2 sm:hidden">
             <Image
-              src="/image/logo-chat.png"
+              src="/logo.svg"
               alt="logo"
               width={100}
               height={100}

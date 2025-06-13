@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
                 chatPoints: 0,
                 workerPoints: 0,
                 pointsUsed: 0,
-                pointResetDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+                pointsResetDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
                 currentplan: "680f11c0d44970f933ae5e54",
             });
         }

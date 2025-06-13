@@ -41,6 +41,7 @@ interface IUser extends Document {
     subscriptionId: string;
     subscriptionStatus: string;
     stripeCustomerId: string;
+    paymentMethod: object;
 }
 
 mongoose.connect(process.env.MONGODB_URL || 'mongodb://localhost:27017/edith-chatapp')
@@ -61,7 +62,8 @@ const db = {
     Plan: planModel(),
     AI: aiModel(),
     UsageStats: usageStateModel(),
-    PlanHistory: planHistoryModel()
+    PlanHistory: planHistoryModel(),
+    ErrorLog: errorLogModel()
 }
 
 function userModel() {
@@ -196,6 +198,10 @@ function userModel() {
         },
         stripeCustomerId: {
             type: String,
+            default: null
+        },
+        paymentMethod: {
+            type: Object,
             default: null
         },
         salt: {
@@ -685,9 +691,25 @@ function planHistoryModel() {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Plan',
         },
+        type: {
+            type: String,
+            required: true,
+            default: null
+        },
         price: {
             type: Number,
             required: true
+        },
+        status: {
+            type: String,
+            required: true,
+            default: "pending"
+        },
+        invoiceId: {
+            type: String,
+        },
+        invoicePdfUrl: {
+            type: String,
         },
         createdAt: {
             type: Date,
@@ -782,6 +804,39 @@ function usageStateModel() {
     });
 
     return mongoose.models.UsageStats || mongoose.model('UsageStats', UsageStatsSchema);
+}
+
+function errorLogModel() {
+    const ErrorLogSchema = new Schema({
+        errorType: {
+            type: String,
+            required: true
+        },
+        message: {
+            type: String,
+            required: true
+        },
+        stack: {
+            type: String,
+        },
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        userEmail: {
+            type: String,
+        },
+        context: {
+            type: Schema.Types.Mixed,
+        },
+        metadata: {
+            type: Schema.Types.Mixed,
+        }
+    }, {
+        timestamps: true
+    });
+
+    return mongoose.models.ErrorLog || mongoose.model('ErrorLog', ErrorLogSchema);
 }
 
 export default db;

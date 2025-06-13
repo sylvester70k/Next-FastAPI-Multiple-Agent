@@ -4,7 +4,6 @@ import { UserRepo } from "@/lib/database/userrepo";
 import { PlanRepo } from "@/lib/database/planRepo";
 import { authOptions } from "@/lib/api/helper";
 import { getServerSession, NextAuthOptions } from "next-auth";
-import db from "@/lib/database/db";
 
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions as NextAuthOptions);
@@ -35,18 +34,13 @@ export async function POST(request: NextRequest) {
         customer: customerId,
         line_items: [{ price: plan.priceId, quantity: 1 }],
         mode: 'subscription',
-        success_url: `${process.env.NEXTAUTH_URL}/subscription?success=true`,
+        success_url: `${process.env.NEXTAUTH_URL}/subscription?success=true&planId=${planId}`,
         cancel_url: `${process.env.NEXTAUTH_URL}/subscription?canceled=true`,
         metadata: {
             userId: user._id.toString(),
             planId: plan._id.toString(),
         },
     });
-    
-    await db.User.updateOne(
-        { email: user.email },
-        { $set: { requestPlanId: planId } }
-    );
 
     return NextResponse.json({ success: true, url: stripeSession.url }, { status: 200 });
 }

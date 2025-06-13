@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest) {
         if (chatHistory) {
             user.chatPoints = getChatPoints(chatHistory.session);
         }
-        await UserRepo.updateUserProfileWithEmail(user.email, user.name, user.avatar, user.wallet, user.chatPoints ?? 0, user.workerPoints ?? 0, user.isNodeConnected, user.isNodeAdded);
+        await UserRepo.updateUserProfileWithEmail(user.email, user.name, user.avatar, user.wallet, user.chatPoints ?? 0, user.workerPoints ?? 0, user.isNodeConnected, user.isNodeAdded, user.paymentMethod);
         return Response.json({ success: true, message: "User updated", user: user });
     } catch (error) {   
         console.error(error);
@@ -62,7 +62,7 @@ export async function GET() {
         if (chatHistory) {
             user.chatPoints = getChatPoints(chatHistory.session);
         }
-        await UserRepo.updateUserProfileWithEmail(user.email, user.name, user.avatar, user.wallet, user.chatPoints ?? 0, user.workerPoints ?? 0, user.isNodeConnected ?? false, user.isNodeAdded ?? false);
+        await UserRepo.updateUserProfileWithEmail(user.email, user.name, user.avatar, user.wallet, user.chatPoints ?? 0, user.workerPoints ?? 0, user.isNodeConnected ?? false, user.isNodeAdded ?? false, user.paymentMethod);
         return Response.json({ success: true, user: user });
     } catch (error) {
         console.error(error);

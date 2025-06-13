@@ -2,10 +2,20 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import ShadowBtn from "../echat/ShadowBtn";
 import { ArrowUp } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
 const Dashboard = () => {
     const router = useRouter();
-    
+    const { data: session } = useSession();
+    const user = session?.user;
+
+    useEffect(() => {
+        if (user) {
+            router.push("/echat");
+        }
+    }, [user]);
+
     return (
         <div className="w-screen h-screen flex flex-col">
             <div className="w-full flex justify-between items-center p-3">
@@ -13,15 +23,19 @@ const Dashboard = () => {
                     <Image src={"/logo.svg"} alt="" width={50} height={20} />
                     Ryxen
                 </div>
-                <ShadowBtn
-                    className="text-lg"
-                    mainClassName="py-1 px-3"
-                    onClick={() => {
-                        router.push("/signin");
-                    }}
-                >
-                    SignIn
-                </ShadowBtn>
+                {
+                    !user && (
+                        <ShadowBtn
+                            className="text-lg" 
+                            mainClassName="py-1 px-3"
+                            onClick={() => {
+                                router.push("/signin");
+                            }}
+                        >
+                            SignIn
+                        </ShadowBtn>
+                    )
+                }
             </div>
             <div className="flex-1 flex flex-col items-center justify-center gap-10">
                 <div className="flex flex-col gap-5 items-center">

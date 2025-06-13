@@ -121,7 +121,7 @@ const SignUp = () => {
       // const recaptchaToken = await executeRecaptcha('google_signup');
       // Cookies.set("recaptchaToken", recaptchaToken);
       await signIn("google", {
-        callbackUrl: "/chatText",
+        callbackUrl: "/echat",
       });
       setIsLoading(prev => ({ ...prev, google: false }));
     } catch (error) {
@@ -136,7 +136,7 @@ const SignUp = () => {
 
   useEffect(() => {
     if (session) {
-      router.push("/chatText");
+      router.push("/echat");
     }
   }, [session]);
 

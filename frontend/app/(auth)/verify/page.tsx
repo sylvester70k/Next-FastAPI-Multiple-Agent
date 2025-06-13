@@ -1,7 +1,9 @@
 'use client';
 
-import { toast } from "@/app/hooks/use-toast";
-import { Button, Typography, Box, FormControl, InputLabel, OutlinedInput } from "@mui/material";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -34,10 +36,7 @@ const Verify = () => {
         const response = await fetch(`/api/auth/verify?token=${token}`);
         const data = await response.json();
         if (data.error) {
-          toast({
-            title: "Error",
-            description: data.error,
-          });
+          toast.error(data.error);
         } else {
           setIsVerified(true);
           setId(data.id);
@@ -46,15 +45,9 @@ const Verify = () => {
       } catch (error) {
         console.log(error);
         if (error instanceof Error && error.message === "Access forbidden - your token is expired") {
-          toast({
-            variant: "destructive",
-            description: "Access forbidden - your token is expired",
-          });
+          toast.error("Access forbidden - your token is expired");
         } else {
-          toast({
-            variant: "destructive",
-            description: "An unexpected error occurred",
-          });
+          toast.error("An unexpected error occurred");
         }
       } finally {
         setIsLoading(false);
@@ -83,31 +76,19 @@ const Verify = () => {
           redirect: false,
         });
         if (result?.error) {
-          toast({
-            variant: "destructive",
-            description: "Access forbidden - your token is expired",
-          });
+          toast.error("Access forbidden - your token is expired");
           return;
         }
         router.push("/");
       } else {
         const data = await res.json();
-        toast({
-          variant: "destructive",
-          description: data.message || "Verification failed",
-        });
+        toast.error(data.message || "Verification failed");
       }
     } catch (error) {
       if (error instanceof Error && error.message === "Access forbidden - your token is expired") {
-        toast({
-          variant: "destructive",
-          description: "Access forbidden - your token is expired",
-        });
+        toast.error("Access forbidden - your token is expired");
       } else {
-        toast({
-          variant: "destructive",
-          description: "An unexpected error occurred",
-        });
+        toast.error("An unexpected error occurred");
       }
     } finally {
       setIsLoading(false);
@@ -121,10 +102,7 @@ const Verify = () => {
       redirect: false,
     });
     if (result?.error) {
-      toast({
-        variant: "destructive",
-        description: "Access forbidden - your token is expired",
-      });
+      toast.error("Access forbidden - your token is expired");
       return;
     }
     setIsContinue(false);
@@ -135,14 +113,14 @@ const Verify = () => {
 
   useEffect(() => {
     if (session) {
-      router.push("/chatText");
+      router.push("/echat");
     }
   }, [session]);
 
   return (
     <>
       {isVerified ? (
-        <Box className="flex flex-col items-center justify-center min-h-screen text-buttonFont">
+        <div className="flex flex-col items-center justify-center min-h-screen text-buttonFont">
           <div className="flex items-end border-none outline-none focus:outline-none py-0 !mb-5 px-[120px]">
             <Image
               src="/image/logo-chat.png"
@@ -154,72 +132,37 @@ const Verify = () => {
           </div>
 
           {/* form */}
-          <Box className="w-full max-w-sm p-6 space-y-4">
+          <div className="w-full max-w-sm p-6 space-y-4">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col items-start space-y-6"
             >
-              <FormControl
-                sx={{
-                  width: "100%",
-                  backgroundColor: "var(--bg-input)",
-                }}
-                variant="outlined"
-              >
-                <InputLabel
-                  htmlFor="outlined-adornment-code"
-                  sx={{
-                    color: "var(--font-button)",
-                    "&.Mui-focused": {
-                      color: "var(--font-button)",
-                    },
-                  }}
-                >
-                  Code
-                </InputLabel>
-                <OutlinedInput
-                  id="outlined-adornment-code"
-                  type="code"
-                  error={!!errors.code}
-                  label="Code"
-                  sx={{
-                    color: "white", // Change input text color
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "var(--border-primary)", // Change border color
-                    },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "var(--border-secondary)", // Optional: Change border color on hover
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "var(--border-secondary)", // Optional: Change border color when focused
-                    },
-                  }}
+              <div className="w-full space-y-2">
+                <Label htmlFor="code">Code</Label>
+                <Input
+                  id="code"
+                  type="text"
                   {...register("code", {
                     required: "Code is required",
                     pattern: {
                       value: /^[A-Za-z0-9]{6}$/,
                       message: "Code must be exactly 6 characters and contain only numbers and letters"
                     }
-
                   })}
+                  className="w-full"
                 />
                 {errors.code && (
-                  <Typography
-                    variant="caption"
-                    color="error"
-                    sx={{ mt: 1, color: "red" }}
-                  >
+                  <p className="text-sm text-red-500">
                     {errors.code.message}
-                  </Typography>
+                  </p>
                 )}
-              </FormControl>
+              </div>
 
               <Button
                 type="submit"
-                variant="contained"
-                fullWidth
+                variant="default"
+                className="w-full h-10"
                 disabled={isLoading}
-                className="!bg-buttonFont hover:!bg-buttonHoverBg h-10 disabled:!bg-buttonHoverBg !text-hoverFont"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
@@ -247,10 +190,9 @@ const Verify = () => {
               </Button>
               <Button
                 type="button"
-                variant="outlined"
-                fullWidth
+                variant="outline"
+                className="w-full h-10"
                 disabled={isLoading}
-                className="h-10 !border-white !text-white hover:!bg-[#ffffff10]"
                 onClick={continueWithoutCode}
               >
                 {isContinue ? (
@@ -277,18 +219,18 @@ const Verify = () => {
                 )}
               </Button>
             </form>
-          </Box>
-        </Box>
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col items-center justify-center min-h-screen">
-          <Typography variant="h5" className="!mb-10 !text-[#E2E2E2]">
+          <h2 className="text-xl font-semibold mb-10 text-[#E2E2E2]">
             {isLoading ? "Verifying email..." : "Verify your email to continue."}
-          </Typography>
+          </h2>
           <Button
             type="button"
-            variant="contained"
+            variant="default"
             onClick={() => router.push("/signin")}
-            className="h-10 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400"
+            className="h-10"
             disabled={isLoading}
           >
             Back to Login

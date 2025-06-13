@@ -119,24 +119,6 @@ export async function POST(request: NextRequest) {
                 break;
             }
 
-            case "customer.subscription.deleted": {
-                const subscription = event.data.object as Stripe.Subscription;
-                const customerId = subscription.customer as string;
-
-                // Find user by Stripe customer ID
-                const user = await UserRepo.getUserByStripeCustomerId(customerId);
-                if (!user) {
-                    console.error("User not found for customer:", customerId);
-                    return NextResponse.json(
-                        { error: "User not found" },
-                        { status: 404 }
-                    );
-                }
-
-                await UserRepo.updateUserSubscription(user.email, null, null, null, null, null, 0, new Date(new Date().setMonth(new Date().getMonth() + 1)), null);
-                break;
-            }
-
             case 'invoice.payment_succeeded': {
                 const invoice = event.data.object as Stripe.Invoice;
                 const subscriptionId = invoice.subscription as string;
@@ -177,16 +159,24 @@ export async function POST(request: NextRequest) {
                     null
                 );
 
-                await PlanRepo.createPlanHistory(user._id, planId._id, planId.price);
+                const planPending = await PlanRepo.getPlanHistoryByUserIdAndPlanId(user._id.toString(), planId._id.toString());
+                if (planPending) {
+                    await PlanRepo.updatePlanHistory(user._id.toString(), planId._id.toString(), "paid", invoice.id, invoice.invoice_pdf);
+                } else {
+                    await PlanRepo.savePlanHistory(user._id.toString(), planId._id.toString(), planId.price, `${planId.name} - ${planId.isYearlyPlan ? "Annual" : "Monthly"}`, "paid", invoice.id, invoice.invoice_pdf);
+                }
 
                 console.log(`Subscription renewed for user: ${user._id}`);
                 break;
             }
 
-            case 'invoice.payment_failed': {
+            case 'invoice.payment_failed':
+            case 'customer.subscription.deleted': {
                 const invoice = event.data.object as Stripe.Invoice;
                 const subscriptionId = invoice.subscription as string;
                 const customerId = invoice.customer as string;
+                const priceId = invoice.lines?.data[0]?.price?.id || null;
+                const planId = await PlanRepo.findByPriceId(priceId || '');
 
                 // Only process subscription invoices
                 if (!subscriptionId) break;
@@ -199,13 +189,12 @@ export async function POST(request: NextRequest) {
                     break;
                 }
 
-                // Get subscription details from Stripe
-                // const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-                
-                // Update user subscription to reflect payment failure
-                // Set status to past_due and add a grace period before cancellation
-                // const gracePeriodEnd = new Date();
-                // gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 7); // 7 day grace period
+                const planPending = await PlanRepo.getPlanHistoryByUserIdAndPlanId(user._id.toString(), planId?._id.toString());
+                if (planPending) {
+                    await PlanRepo.updatePlanHistory(user._id.toString(), planId?._id.toString(), "failed", invoice.id, invoice.invoice_pdf);
+                } else {
+                    await PlanRepo.savePlanHistory(user._id.toString(), planId?._id.toString(), 0, `${planId?.name} - ${planId?.isYearlyPlan ? "Annual" : "Monthly"}`, "failed", invoice.id, invoice.invoice_pdf);
+                }
 
                 await UserRepo.updateUserSubscription(
                     user.email,
@@ -232,4 +221,4 @@ export async function POST(request: NextRequest) {
             { status: 500 }
         );
     }
-}   
+} 

@@ -34,10 +34,11 @@ export interface IUser {
     nodeConnectedTime?: Date;
     nodeRewardHash?: string;
     pointsUsed: number;
-    pointResetDate: Date;
+    pointsResetDate: Date;
     currentplan?: string;
     requestPlanId?: string;
     disableModel?: string[];
+    paymentMethod?: object;
 }
 
 export interface ChatHistory {
@@ -105,9 +106,8 @@ export interface AuthContextType {
     setUser: Dispatch<SetStateAction<User | null>>;
     isLoading: boolean;
     setIsLoading: (isLoading: boolean) => void;
-    isNodeConnected: boolean;
-    setIsNodeConnected: (isNodeConnected: boolean) => void;
-    workerPoints: number;
+    requestPlanId: string | null;
+    setRequestPlanId: (requestPlanId: string | null) => void;
 }
 
 export interface User {
@@ -128,6 +128,7 @@ export interface User {
     planEndDate?: Date;
     pointsResetDate?: Date;
     pointsUsed?: number;
+    paymentMethod?: object;
 }
 
 export interface ISubscriptionPlan {

@@ -2,11 +2,21 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { ISubscriptionPlan } from '@/lib/interface';
+import { Separator } from '@/components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSearchParams } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
 export default function Page() {
     return (
@@ -18,25 +28,47 @@ export default function Page() {
 
 const SubscriptionPage = () => {
     const [plans, setPlans] = useState<ISubscriptionPlan[]>([]);
-    const { user, setUser } = useAuth();
+    const { user, setUser, requestPlanId, setRequestPlanId } = useAuth();
     const [isYearly, setIsYearly] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
-    const [requestPlanId, setRequestPlanId] = useState<string | null>(null);
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        planId: '',
+        planName: ''
+    });
     const router = useRouter();
     const searchParams = useSearchParams();
     const success = searchParams.get('success');
     const canceled = searchParams.get('canceled');
+    const planId = searchParams.get('planId');
 
     useEffect(() => {
         if (success) {
-            toast.success("Subscription created successfully");
+            setRequestPlanId(planId || '');
+            toast("Subscription created successfully");
+            fetch('/api/user/subscription/requestUpdate', {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ planId: planId })
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    // setUser(data.user);
+                    toast("Subscription created successfully");
+                }
+            });
         }
         if (canceled) {
-            fetch('/api/user/subscription/requestCancel').then(res => res.json()).then(data => {
-                if (data.success) {
-                    setUser(data.user);
-                    toast.error("Subscription creation canceled");
-                }
+            // fetch('/api/user/subscription/requestCancel').then(res => res.json()).then(data => {
+            //     if (data.success) {
+            //         setUser(data.user);
+            //         toast({
+            //             description: "Subscription creation canceled",
+            //             variant: "destructive"
+            //         });
+            //     }
+            // });
+            toast("Subscription creation canceled", {
+                style: { backgroundColor: 'red', color: 'white' }
             });
         }
     }, [success, canceled]);
@@ -56,14 +88,23 @@ const SubscriptionPage = () => {
             }
         };
 
+        const fetchUserData = async () => {
+            try {
+                const res = await fetch(`/api/user/profile`);
+                const data = await res.json();
+                if (data.success) {
+                    setUser(data.user);
+                } else {
+                    signOut();
+                }
+            } catch (err) {
+                console.error("Error fetching user data:", err);
+                signOut();
+            }
+        }
+        fetchUserData();
         fetchData();
     }, []);
-
-    useEffect(() => {
-        if (user?.requestPlanId) {
-            setRequestPlanId(user.requestPlanId);
-        }
-    }, [user?.requestPlanId]);
 
     const handleUpgrade = async (planId: string) => {
         setIsLoading(true);
@@ -94,45 +135,70 @@ const SubscriptionPage = () => {
 
                 const data = await response.json();
                 if (data.success) {
-                    toast.success("Your Request is being processed, please wait for the confirmation");
-                    setUser(data.user);
+                    toast("Your Request is being processed, please wait for the confirmation");
+                    // setUser(data.user);
+                    setRequestPlanId(planId);
                 } else {
                     throw new Error(data.error || "Failed to upgrade subscription");
                 }
             }
         } catch (error) {
             console.error("Error upgrading subscription:", error);
-            toast.error(error instanceof Error ? error.message : "Failed to upgrade subscription");
+            toast(error instanceof Error ? error.message : "Failed to upgrade subscription", {
+                style: { backgroundColor: 'red', color: 'white' }
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleDowngrade = async (planId: string) => {
-        setIsLoading(true);
-        try {
-            const plan = plans.find(p => p._id === planId);
-            if (!plan) throw new Error("Plan not found");
+        const plan = plans.find(p => p._id === planId);
+        if (!plan) {
+            toast("Plan not found", {
+                style: { backgroundColor: 'red', color: 'white' }
+            });
+            return;
+        }
 
+        // Show confirmation dialog
+        setConfirmDialog({
+            open: true,
+            planId: planId,
+            planName: plan.name
+        });
+    };
+
+    const handleConfirmDowngrade = async () => {
+        setConfirmDialog({ open: false, planId: '', planName: '' });
+        setIsLoading(true);
+
+        try {
             const response = await fetch("/api/user/subscription/downgrade", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ planId })
+                body: JSON.stringify({ planId: confirmDialog.planId })
             });
 
             const data = await response.json();
             if (data.success) {
-                toast.success("Your Request is being processed, please wait for the confirmation");
-                setUser(data.user);
+                toast("Your Request is being processed, please wait for the confirmation");
+                setRequestPlanId(confirmDialog.planId);
             } else {
                 throw new Error(data.error || "Failed to downgrade subscription");
             }
         } catch (error) {
             console.error("Error downgrading subscription:", error);
-            toast.error(error instanceof Error ? error.message : "Failed to downgrade subscription");
+            toast(error instanceof Error ? error.message : "Failed to downgrade subscription", {
+                style: { backgroundColor: 'red', color: 'white' }
+            });
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleCancelDowngrade = () => {
+        setConfirmDialog({ open: false, planId: '', planName: '' });
     };
 
     const handleCancelPending = async (planId: string) => {
@@ -147,13 +213,15 @@ const SubscriptionPage = () => {
             const data = await response.json();
             if (data.success) {
                 setRequestPlanId(null);
-                toast.success("Your Request is canceled");
+                toast("Your Request is canceled");
             } else {
                 throw new Error(data.error || "Failed to cancel pending subscription");
             }
         } catch (error) {
             console.error("Error canceling pending subscription:", error);
-            toast.error(error instanceof Error ? error.message : "Failed to cancel pending subscription");
+            toast(error instanceof Error ? error.message : "Failed to cancel pending subscription", {
+                style: { backgroundColor: 'red', color: 'white' }
+            });
         } finally {
             setIsLoading(false);
         }
@@ -193,6 +261,47 @@ const SubscriptionPage = () => {
                         />
                     ))}
                 </div>
+
+                {/* Downgrade Confirmation Dialog */}
+                <Dialog open={confirmDialog.open} onOpenChange={handleCancelDowngrade}>
+                    <DialogContent className="bg-[#020202] border-[#FFFFFF1F] text-white min-w-[400px] max-w-[500px]">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+                                <AlertTriangle className="text-yellow-500" size={24} />
+                                Confirm Downgrade
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="text-[#AEB0B9] pb-2">
+                            Are you sure you want to downgrade to the <strong className="text-white">{confirmDialog.planName}</strong> plan?
+                            <br /><br />
+                            This action will:
+                            <ul className="list-disc list-inside mt-2 space-y-1">
+                                <li>Reduce your subscription benefits</li>
+                                <li>Cannot be undone immediately</li>
+                                <li>Take effect at the end of your current billing cycle</li>
+                            </ul>
+                        </div>
+                        <DialogFooter className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={handleCancelDowngrade}
+                                className="text-[#AEB0B9] border-[#FFFFFF26] hover:bg-[#FFFFFF14] hover:border-[#FFFFFF40]"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleConfirmDowngrade}
+                                disabled={isLoading}
+                                className="bg-gradient-to-b from-[#FFFFFF] to-[#898989] text-black hover:opacity-90 disabled:opacity-50"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : null}
+                                Confirm Downgrade
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );
@@ -271,11 +380,11 @@ const PlanCard = ({
                     <span className="text-[14px] sm:text-[16px] text-[#AEB0B9]">/ month</span>
                 </div>
 
-                <div className="mt-3 border-dashed border-[#FFFFFF33] h-[1px] w-full" />
+                <Separator className='mt-3 border-dashed border-[#FFFFFF33]' />
                 <div className='my-2 text-[14px] sm:text-[16px] text-[#AEB0B9]'>
                     Totalling to ${plan.isYearlyPlan ? plan.price : (plan.price * 12).toFixed(2)} yearly
                 </div>
-                <div className="my-2 border-dashed border-[#FFFFFF33] h-[1px] w-full" />
+                <Separator className='border-dashed border-[#FFFFFF33]' />
 
                 <button
                     className={`w-full mt-3 sm:mt-7 py-2 rounded-full text-base sm:text-[16px] font-medium border h-11 hover:outline-none hover:border-transparent

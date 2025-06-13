@@ -20,11 +20,11 @@ const ChatText = () => {
               <div className="flex flex-col items-center justify-center max-sm:flex-auto">
                 <div className="flex items-end justify-center border-none outline-none focus:outline-none">
                   <Image
-                    src="/image/logo-chat.png"
+                    src="/logo.svg"
                     alt="logo"
                     width={300}
                     height={300}
-                    className="h-[60px] sm:h-[92px] w-auto"
+                    className="h-[40px] sm:h-[50px] w-auto"
                   />
                 </div>
                 <span className="text-[16px] sm:text-[24px] text-white mt-6 text-center mb-[60px]">

@@ -120,7 +120,7 @@ export const authOptions = {
                         // board: [],
                         nodeRewardHash: generateNodeRewardHash(),
                         pointsUsed: 0,
-                        pointResetDate: new Date(),
+                        pointsResetDate: new Date(),
                     });
 
                     const magicLink = `${process.env.NEXTAUTH_URL}/verify?token=${token}`;

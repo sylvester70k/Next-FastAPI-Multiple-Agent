@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogOut, Settings, CreditCard, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ShadowBtn from "@/components/echat/ShadowBtn";
@@ -37,6 +37,7 @@ const MobileDropDownMenu = ( { endpoint }: {endpoint: string}) => {
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [menuItems, setMenuItems] = useState<MenuItem[]>(MenuItems);
+  const [isActive, setIsActive] = useState<boolean>(false);
   const handleSetting = () => {
     router.push("/userSetting");
     setIsOpen(false);
@@ -55,6 +56,16 @@ const MobileDropDownMenu = ( { endpoint }: {endpoint: string}) => {
       }))
     );
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        setIsActive(true);
+      }, 500);
+    } else {
+      setIsActive(false);
+    }
+  }, [isOpen]);
 
   return (
     <DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
@@ -106,16 +117,20 @@ const MobileDropDownMenu = ( { endpoint }: {endpoint: string}) => {
           ))}
         </div>
         <DropdownMenuSeparator className="block sm:hidden bg-[#FFFFFF]/10" /> */}
-        <div className="flex w-full justify-between px-3 py-4 items-center sm:hidden">
-          <span className="text-mainFont text-base">Settings</span>
-          <ShadowBtn
-            className="rounded-md"
-            mainClassName="rounded-md border-[#2C2B30] border bg-[#292929] shadow-btn-google text-white p-2 flex items-center justify-center gap-2"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <X size={18} />
-          </ShadowBtn>
-        </div>
+        {
+          isOpen && (
+            <div className="flex w-full justify-between px-3 py-4 items-center sm:hidden">
+              <span className="text-mainFont text-base">Settings</span>
+              <ShadowBtn
+                className="rounded-md"
+                mainClassName="rounded-md border-[#2C2B30] border bg-[#292929] shadow-btn-google text-white p-2 flex items-center justify-center gap-2 sm:hidden"
+                onClick={() => isActive && setIsOpen(false)}
+              >
+                <X size={18} />
+              </ShadowBtn>
+            </div>
+          )
+        }
         <DropdownMenuSub>
           <DropdownMenuItem
             className="hover:bg-[#ffffff80] focus:bg-[#ffffff80] h-10 py-0 text-base transition-all duration-300 text-mainFont max-sm:hidden flex items-center gap-2"

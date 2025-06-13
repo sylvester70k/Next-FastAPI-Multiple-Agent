@@ -44,7 +44,7 @@ export default function RootLayout({
         />
         <link rel="manifest" href="/favicon/site.webmanifest" />
       </head>
-      <body className={`antialiased`}>
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
