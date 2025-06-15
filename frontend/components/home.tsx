@@ -23,6 +23,7 @@ import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
 import { useRouter, useSearchParams } from "next/navigation";
 import SidebarButton from "@/components/sidebar-button";
+import { useSession } from "next-auth/react";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -53,6 +54,7 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session } = useSession();
 
   // Add Google Drive related state
   const [isGoogleDriveConnected, setIsGoogleDriveConnected] = useState(false);
@@ -109,8 +111,20 @@ export default function Home() {
 
       setIsLoadingSession(true);
       try {
+        // Get the session token
+        const sessionToken = session?.accessToken;
+        if (!sessionToken) {
+          throw new Error("No authentication token found");
+        }
+
         const response = await fetch(
-          `${process.env.NEXTAUTH_URL}/api/sessions/${id}/events`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${id}/events`,
+          {
+            headers: {
+              "Authorization": `Bearer ${sessionToken}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
 
         if (!response.ok) {
@@ -164,7 +178,7 @@ export default function Home() {
     };
 
     fetchSessionEvents();
-  }, [searchParams]);
+  }, [searchParams, session]);
 
   // Initialize device ID on page load
   useEffect(() => {
@@ -362,7 +376,7 @@ export default function Home() {
       socket.close();
     }
     setSessionId(null);
-    router.push("/");
+    router.push("/ultron");
     setMessages([]);
     setIsLoading(false);
     setIsCompleted(false);
@@ -478,12 +492,19 @@ export default function Home() {
               const content = e.target?.result as string;
               fileContentMap[file.name] = content;
 
-              // Upload the file
+              // Get the session token
+              const sessionToken = session?.accessToken;
+              if (!sessionToken) {
+                throw new Error("No authentication token found");
+              }
+
+              // Upload the file with authentication
               const response = await fetch(
-                `${process.env.NEXTAUTH_URL}/api/upload`,
+                `${process.env.NEXT_PUBLIC_API_URL}/api/upload`,
                 {
                   method: "POST",
                   headers: {
+                    "Authorization": `Bearer ${sessionToken}`,
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
@@ -841,11 +862,15 @@ export default function Home() {
     // Connect to WebSocket when the component mounts
     const connectWebSocket = () => {
       setWsConnectionState("connecting");
-      const params = new URLSearchParams({ device_id: deviceId });
+      const params = new URLSearchParams({
+        device_id: deviceId,
+        token: session?.accessToken || '',
+      });
       const ws = new WebSocket(
         `${process.env.NEXT_PUBLIC_API_URL}/ws?${params.toString()}`
       );
 
+      // Add authentication headers to WebSocket connection
       ws.onopen = () => {
         console.log("WebSocket connection established");
         setWsConnectionState("connected");

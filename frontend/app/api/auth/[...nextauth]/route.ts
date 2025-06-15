@@ -112,7 +112,7 @@ const authOptions: NextAuthOptions = {
                         chatPoints: 0,
                         workerPoints: 0,
                         pointsUsed: 0,
-                        pointResetDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+                        pointsResetDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
                         currentplan: "680f11c0d44970f933ae5e54",
                     });
 
@@ -155,14 +155,28 @@ const authOptions: NextAuthOptions = {
             return true;
         },
         async jwt({ token, account, user }: { token: JWT, account: Account | null, user: NextAuthUser | AdapterUser }) {
-            if (account) {
-                token.accessToken = account.access_token
+            // For Google OAuth
+            if (account?.provider === 'google') {
+                token.accessToken = account.access_token;
+            }
+            // For credentials login
+            else if (user) {
+                // Generate a custom token for credentials login
+                const customToken = await generateConfirmationToken(user.email as string, "credentials");
+                token.accessToken = customToken;
+            }
+            
+            // Always include user info
+            if (user) {
                 token.name = user.name;
                 token.email = user.email;
             }
-            return token
+            
+            return token;
         },
         async session({ session, token }: { session: Session, token: JWT }) {
+            // Add the access token to the session
+            session.accessToken = token.accessToken as string;
             if (session.user) {
                 session.user.name = token.name as string;
                 session.user.email = token.email as string;

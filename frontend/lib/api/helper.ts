@@ -172,6 +172,7 @@ export const authOptions = {
             return token
         },
         async session({ session, token }: { session: Session, token: JWT }) {
+            session.accessToken = token.accessToken as string;
             if (session.user) {
                 session.user.name = token.name as string;
                 session.user.email = token.email as string;

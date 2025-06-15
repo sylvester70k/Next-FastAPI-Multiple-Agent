@@ -8,6 +8,7 @@ import { ISession } from "@/typings/agent";
 import Cookies from "js-cookie";
 import dayjs from "dayjs";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const SidebarButton = ({ className, workspaceInfo }: SidebarButtonProps) => {
 
   const searchParams = useSearchParams();
   const deviceId = Cookies.get("device_id") || "";
+  const { data: session, status } = useSession();
 
   // Get the current session ID from URL parameters
   useEffect(() => {
@@ -45,14 +47,30 @@ const SidebarButton = ({ className, workspaceInfo }: SidebarButtonProps) => {
   };
 
   const fetchSessions = useCallback(async () => {
-    if (!deviceId) return;
+    // Check if user is authenticated
+    if (status !== "authenticated" || !session) {
+      setError("User not authenticated");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
+      // Get the session token from the session object
+      const sessionToken = session?.accessToken;
+      if (!sessionToken) {
+        throw new Error("No authentication token found");
+      }
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/sessions/${deviceId}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/sessions`,
+        {
+          headers: {
+            "Authorization": `Bearer ${sessionToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (!response.ok) {
@@ -67,7 +85,7 @@ const SidebarButton = ({ className, workspaceInfo }: SidebarButtonProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [deviceId]);
+  }, [session, status]);
 
   const handleSessionClick = (sessionId: string) => {
     // Redirect to the session or load it in the current view
@@ -84,8 +102,10 @@ const SidebarButton = ({ className, workspaceInfo }: SidebarButtonProps) => {
   };
 
   useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+    if (status === "authenticated" && session) {
+      fetchSessions();
+    }
+  }, [fetchSessions, session, status]);
 
   return (
     <>

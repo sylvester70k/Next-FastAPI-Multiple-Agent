@@ -1,6 +1,8 @@
 import mongoose, { Document, Schema, SchemaOptions } from 'mongoose';
 import Crypto from 'crypto';
 
+console.log(process.env.MONGODB_URL);
+
 interface IUser extends Document {
     email: string;
     password: string;

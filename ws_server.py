@@ -13,7 +13,7 @@ import json
 import logging
 import uuid
 from pathlib import Path
-from typing import Dict, List, Set, Any
+from typing import Dict, List, Set, Any, Optional
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,6 +31,8 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import anyio
 import base64
+import jwt
+from datetime import datetime
 
 from ii_agent.core.event import RealtimeEvent, EventType
 from ii_agent.db.models import Session, Event
@@ -70,7 +72,15 @@ app.add_middleware(
 
 # Create a logger
 logger = logging.getLogger("websocket_server")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
+
+# Add a console handler if not already present
+if not logger.handlers:
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
 # Active WebSocket connections
 active_connections: Set[WebSocket] = set()
@@ -86,6 +96,116 @@ message_processors: Dict[WebSocket, asyncio.Task] = {}
 
 # Store global args for use in endpoint
 global_args = None
+
+
+def authenticate_request(request: Request) -> Dict[str, Any]:
+    """Extract and validate NextAuth JWT token from request headers.
+    
+    Args:
+        request: FastAPI Request object
+        
+    Returns:
+        Dict containing user information
+        
+    Raises:
+        HTTPException: If authentication fails
+    """
+    headers = request.headers
+    auth_header = headers.get("Authorization")
+    if not auth_header:
+        logger.error("Authorization header missing")
+        raise HTTPException(
+            status_code=401, detail="Authorization header missing"
+        )
+    
+    logger.debug(f"Auth header: {auth_header[:50]}...")  # Log first 50 chars for debugging
+    
+    # Extract token from "Bearer <token>" format
+    try:
+        parts = auth_header.split(" ")
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            logger.error(f"Invalid Authorization header format: {auth_header[:50]}...")
+            raise HTTPException(
+                status_code=401, detail="Invalid Authorization header format. Expected 'Bearer <token>'"
+            )
+        token = parts[1]
+    except IndexError:
+        logger.error(f"Failed to parse Authorization header: {auth_header[:50]}...")
+        raise HTTPException(
+            status_code=401, detail="Invalid Authorization header format"
+        )
+    
+    # Check if token is empty
+    if not token or token.strip() == "":
+        logger.error("Empty token provided")
+        raise HTTPException(
+            status_code=401, detail="Empty token provided"
+        )
+    
+    # Decode the NextAuth JWT token to get user info
+    user_info = decode_nextauth_token(token)
+    if not user_info:
+        raise HTTPException(
+            status_code=401, detail="Invalid or expired token"
+        )
+    
+    return user_info
+
+
+def decode_nextauth_token(token: str) -> Optional[Dict[str, Any]]:
+    """Decode and verify NextAuth JWT token.
+    
+    Args:
+        token: The JWT token from NextAuth
+        
+    Returns:
+        Dict containing user information if valid, None otherwise
+    """
+    try:
+        # Log the token format for debugging (only first and last 10 chars for security)
+        logger.debug(f"Token format: {token[:10]}...{token[-10:] if len(token) > 20 else token}")
+        logger.debug(f"Token length: {len(token)}")
+        
+        # Get the NextAuth secret from environment
+        secret = os.getenv('NEXTAUTH_SECRET')
+        if not secret:
+            logger.error("NEXTAUTH_SECRET not found in environment variables")
+            return None
+        
+        # Decode the JWT token without verification first to see the structure
+        unverified = jwt.decode(token, options={"verify_signature": False})
+        logger.debug(f"Unverified token contents: {unverified}")
+        
+        # Now decode with verification using HS256 (NextAuth's default)
+        decoded = jwt.decode(
+            token,
+            secret,
+            algorithms=["HS256"],
+            options={"verify_exp": True}  # Verify expiration
+        )
+        
+        # Extract user information
+        user_info = {
+            "name": decoded.get("name"),
+            "email": decoded.get("email"),
+            "sub": decoded.get("sub"),  # Subject (user ID)
+            "iat": decoded.get("iat"),  # Issued at
+            "exp": decoded.get("exp"),  # Expires at
+            "jti": decoded.get("jti"),  # JWT ID
+        }
+        
+        logger.info(f"Successfully decoded token for user: {user_info.get('email')}")
+        return user_info
+        
+    except jwt.ExpiredSignatureError:
+        logger.error("JWT token has expired")
+        return None
+    except jwt.InvalidTokenError as e:
+        logger.error(f"Invalid JWT token: {str(e)}")
+        return None
+    except Exception as e:
+        logger.error(f"Error decoding JWT token: {str(e)}")
+        return None
 
 
 def map_model_name_to_client(model_name: str, ws_content: Dict[str, Any]) -> LLMClient:
@@ -499,7 +619,15 @@ def create_agent_for_connection(
 ):
     """Create a new agent instance for a websocket connection."""
     global global_args
-    device_id = websocket.query_params.get("device_id")
+    token = websocket.query_params.get("token")
+    if not token:
+        raise HTTPException(
+            status_code=401, detail="Unauthorized"
+        )
+    user_info = decode_nextauth_token(token)
+    user_email = user_info.get("email")
+    # user_name = user_info.get("name")
+    device_id = user_email
     # Setup logging
     logger_for_agent_logs = logging.getLogger(f"agent_logs_{id(websocket)}")
     logger_for_agent_logs.setLevel(logging.DEBUG)
@@ -634,6 +762,8 @@ async def upload_file_endpoint(request: Request):
         data = await request.json()
         session_id = data.get("session_id")
         file_info = data.get("file")
+        user_info = authenticate_request(request)
+        user_email = user_info.get("email")
 
         if not session_id:
             return JSONResponse(
@@ -726,8 +856,8 @@ async def upload_file_endpoint(request: Request):
         )
 
 
-@app.get("/api/sessions/{device_id}")
-async def get_sessions_by_device_id(device_id: str):
+@app.get("/api/sessions")
+async def get_sessions_by_device_id(request: Request):
     """Get all sessions for a specific device ID, sorted by creation time descending.
     For each session, also includes the first user message if available.
 
@@ -738,8 +868,23 @@ async def get_sessions_by_device_id(device_id: str):
         A list of sessions with their details and first user message, sorted by creation time descending
     """
     try:
+        # Authenticate the request and get user info
+        user_info = authenticate_request(request)
+        
         # Initialize database manager
         db_manager = DatabaseManager()
+        
+        # You now have access to user information:
+        user_email = user_info.get("email")
+        user_name = user_info.get("name")
+        logger.info(f"Request from authenticated user: {user_name} ({user_email})")
+        
+        # Extract device_id from the request parameters
+        device_id = user_email
+        if not device_id:
+            raise HTTPException(
+                status_code=400, detail="device_id parameter is required"
+            )
 
         # Get all sessions for this device, sorted by created_at descending
         sessions_data = []
@@ -775,21 +920,27 @@ async def get_sessions_by_device_id(device_id: str):
 
 
 @app.get("/api/sessions/{session_id}/events")
-async def get_session_events(session_id: str):
+async def get_session_events(session_id: str, request: Request):
     """Get all events for a specific session ID, sorted by timestamp ascending.
 
     Args:
         session_id: The session identifier to look up events for
+        request: FastAPI Request object for authentication
 
     Returns:
         A list of events with their details, sorted by timestamp ascending
     """
     try:
-        # Initialize database manager
-        db_manager = DatabaseManager()
+        # Authenticate the request and get user info
+        user_info = authenticate_request(request)
+        
+        # Log the authenticated user accessing session events
+        user_email = user_info.get("email")
+        user_name = user_info.get("name")
+        logger.info(f"User {user_name} ({user_email}) accessing events for session {session_id}")
 
         # Get all events for this session, sorted by timestamp ascending
-        events = Event.objects(session_id=session_id).order_by('timestamp')
+        events = Event.objects(session_id=session_id, device_id=user_email).order_by('timestamp')
         
         # Get the session to get workspace_dir
         session = Session.objects(id=session_id).first()
@@ -816,6 +967,27 @@ async def get_session_events(session_id: str):
         raise HTTPException(
             status_code=500, detail=f"Error retrieving events: {str(e)}"
         )
+
+
+@app.get("/api/debug-auth")
+async def debug_auth(request: Request):
+    """Debug endpoint to test authentication token parsing."""
+    try:
+        headers = request.headers
+        auth_header = headers.get("Authorization")
+        
+        return JSONResponse({
+            "auth_header_present": bool(auth_header),
+            "auth_header_format": auth_header[:50] + "..." if auth_header and len(auth_header) > 50 else auth_header,
+            "auth_header_length": len(auth_header) if auth_header else 0,
+            "has_bearer": auth_header.startswith("Bearer ") if auth_header else False,
+            "token_segments": len(auth_header.split(" ")[1].split(".")) if auth_header and " " in auth_header else 0,
+        })
+    except Exception as e:
+        return JSONResponse({
+            "error": str(e),
+            "auth_header_present": bool(request.headers.get("Authorization")),
+        })
 
 
 if __name__ == "__main__":
