@@ -11,7 +11,7 @@ import {
 import { Dialog, DialogTitle, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
-import { Loader2, CreditCard, X } from 'lucide-react';
+import { Loader2, CreditCard } from 'lucide-react';
 
 // Load Stripe (make sure to use your publishable key)
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);

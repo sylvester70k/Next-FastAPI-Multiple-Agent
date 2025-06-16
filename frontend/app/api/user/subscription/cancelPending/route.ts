@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/api/helper";
 import { getServerSession, AuthOptions } from "next-auth";
 import { UserRepo } from "@/lib/database/userrepo";
@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-02-24.acacia",
 });
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     const session = await getServerSession(authOptions as AuthOptions);
     if (!session) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -24,6 +24,25 @@ import { formatNumber } from "@/lib/utils";
 import PaymentMethodUpdate from "@/components/echat/PaymentMethodUpdate";
 import { signOut } from "next-auth/react";
 
+interface CardPaymentMethod {
+    type: 'card';
+    card: {
+        brand: string;
+        last4: string;
+        exp_month: number;
+        exp_year: number;
+    };
+}
+
+interface LinkPaymentMethod {
+    type: 'link';
+    link: {
+        email: string;
+    };
+}
+
+type PaymentMethod = CardPaymentMethod | LinkPaymentMethod;
+
 const UserSetting = () => {
     const { user, setUser, setRequestPlanId } = useAuth();
     const [copyStatus, setCopyStatus] = useState<boolean>(false);
@@ -162,12 +181,12 @@ const UserSetting = () => {
         }
     }, [user])
 
-    const cancelSubscription = () => {
-        // Show confirmation dialog
-        setConfirmCancelDialog({
-            open: true
-        });
-    };
+    // const cancelSubscription = () => {
+    //     // Show confirmation dialog
+    //     setConfirmCancelDialog({
+    //         open: true
+    //     });
+    // };
 
     const handleConfirmCancelSubscription = async () => {
         setConfirmCancelDialog({ open: false });
@@ -404,19 +423,19 @@ const UserSetting = () => {
                                         <div className="flex items-center gap-3">
                                             {
                                                 user?.paymentMethod && (
-                                                    <PaymentMethodImage paymentMethod={user?.paymentMethod} />
+                                                    <PaymentMethodImage paymentMethod={user?.paymentMethod as PaymentMethod} />
                                                 )
                                             }
                                             <div className="flex flex-col">
                                                 {
-                                                    (user?.paymentMethod as any)?.type === 'card' ? (
+                                                    (user?.paymentMethod as PaymentMethod)?.type === 'card' ? (
                                                         <>
-                                                            <div className="text-[16px]">**** **** **** {(user?.paymentMethod as any)?.card?.last4}</div>
-                                                            <div className="text-[#808080] text-[10px]">Expires {(user?.paymentMethod as any)?.card?.exp_month}/{(user?.paymentMethod as any)?.card?.exp_year}</div>
+                                                            <div className="text-[16px]">**** **** **** {(user?.paymentMethod as CardPaymentMethod)?.card?.last4}</div>
+                                                            <div className="text-[#808080] text-[10px]">Expires {(user?.paymentMethod as CardPaymentMethod)?.card?.exp_month}/{(user?.paymentMethod as CardPaymentMethod)?.card?.exp_year}</div>
                                                         </>
-                                                    ) : (user?.paymentMethod as any)?.type === 'link' ? (
+                                                    ) : (user?.paymentMethod as PaymentMethod)?.type === 'link' ? (
                                                         <>
-                                                            <div className="text-[16px]">{(user?.paymentMethod as any)?.link?.email}</div>
+                                                            <div className="text-[16px]">{(user?.paymentMethod as LinkPaymentMethod)?.link?.email}</div>
                                                         </>
                                                     ) : (
                                                         <>
@@ -523,7 +542,7 @@ const UserSetting = () => {
     )
 }
 
-const PaymentMethodImage = ({ paymentMethod }: { paymentMethod: any }) => {
+const PaymentMethodImage = ({ paymentMethod }: { paymentMethod: PaymentMethod }) => {
     const [imageError, setImageError] = useState(false);
 
     const handleImageError = () => {

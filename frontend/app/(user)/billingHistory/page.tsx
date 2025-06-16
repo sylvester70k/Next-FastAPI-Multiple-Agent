@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { IBillingHistory } from "@/lib/interface";
 
 const BillingHistory = () => {
 
-    const [planHistory, setPlanHistory] = useState<any[]>([]);
+    const [planHistory, setPlanHistory] = useState<IBillingHistory[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
@@ -67,7 +68,7 @@ const BillingHistory = () => {
                             </thead>
                             <tbody>
                                 {planHistory.length > 0 ? planHistory.map((history, index) => (
-                                    <tr key={history._id} className="bg-transparent border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                                    <tr key={index} className="bg-transparent border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                                         <td className="py-4 px-4 lg:px-6 text-gray-200 text-sm lg:text-base">
                                             {format(new Date(history.createdAt), "yyyy/MM/dd")}
                                         </td>
@@ -105,7 +106,7 @@ const BillingHistory = () => {
                 {/* Mobile Card View */}
                 <div className="md:hidden space-y-4">
                     {planHistory.length > 0 ? planHistory.map((history, index) => (
-                        <div key={history._id} className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-sm border border-gray-600/30 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-gray-500/50">
+                        <div key={index} className="bg-gradient-to-br from-gray-800/40 to-gray-900/40 backdrop-blur-sm border border-gray-600/30 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-gray-500/50">
                             {/* Header with Date and Status */}
                             <div className="flex justify-between items-center mb-4">
                                 <div className="flex flex-col">

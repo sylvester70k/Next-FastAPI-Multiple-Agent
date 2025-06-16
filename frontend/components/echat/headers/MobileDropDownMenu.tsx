@@ -16,27 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EditIcon from "@/assets/editIcon";
-import { MenuItems } from "@/lib/stack";
 import { signOut } from "next-auth/react";
 import ChangeLog from "@/assets/changelog";
 import DocsIcon from "@/assets/docs";
 
-type MenuItem = {
-  id: string;
-  label: string;
-  subItems: {
-    id: string;
-    label: string;
-    disable: boolean;
-  }[];
-};
-
-const MobileDropDownMenu = ( { endpoint }: {endpoint: string}) => {
+const MobileDropDownMenu = () => {
   const router = useRouter();
   const { user } = useAuth();
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(MenuItems);
   const [isActive, setIsActive] = useState<boolean>(false);
   const handleSetting = () => {
     router.push("/userSetting");
@@ -47,15 +35,6 @@ const MobileDropDownMenu = ( { endpoint }: {endpoint: string}) => {
     signOut();
     setIsOpen(false);
   }
-
-  const handleItemClick = (itemId: string) => {
-    setMenuItems((prevItems) =>
-      prevItems.map((item) => ({
-        ...item,
-        checked: item.id === itemId,
-      }))
-    );
-  };
 
   useEffect(() => {
     if (isOpen) {
@@ -90,8 +69,6 @@ const MobileDropDownMenu = ( { endpoint }: {endpoint: string}) => {
               <Image src="/image/default-avatar.png" alt="avatar" className="!h-[35px] !w-auto max-w-[35px]" width={35} height={35} />
             )
           }
-
-          {/* {endpoint != "router" && <p className="font-semibold text-sm text-[#FFFFFF]">Points: {user?.chatPoints ? user?.chatPoints.toFixed(2) : 0.00}</p>} */}
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent

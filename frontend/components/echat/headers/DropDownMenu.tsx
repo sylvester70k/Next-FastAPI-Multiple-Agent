@@ -32,7 +32,7 @@ const DropDownMenu = () => {
   const url = pathname.split("/")[1];
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [itemId, setItemId] = useState<string>("");
+  const [, setItemId] = useState<string>("");
   const [itemTitle, setItemTitle] = useState<string>("");
 
   const handleItemClick = (itemId: string) => {

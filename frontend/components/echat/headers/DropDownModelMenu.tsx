@@ -21,7 +21,7 @@ const DropDownModelMenu = () => {
   const [itemTitle, setItemTitle] = useState<string>("Atlas by EDITH");
   const [routerModel, setRouterModel] = useAtom(routerModelAtom);
   const [routerModels, setRouterModels] = useAtom(routerModelsAtom);
-  const [modelType, setModelType] = useAtom(modelTypeAtom);
+  const [, setModelType] = useAtom(modelTypeAtom);
 
   const handleItemClick = (itemId: string) => {
     const item = routerModels.find((item) => item._id === itemId);
@@ -43,7 +43,9 @@ const DropDownModelMenu = () => {
           setRouterModels(data.data);
           if (!routerModel) {
             setItemTitle(data.data[0].name);
-            !routerModel && setRouterModel(data.data[0]._id);
+            if (!routerModel) {
+              setRouterModel(data.data[0]._id);
+            }
           } else {
             setItemTitle(routerModels.find((item) => item._id === routerModel)?.name || "");
           }
@@ -58,7 +60,9 @@ const DropDownModelMenu = () => {
     if (!menuId) {
       setMenuId(ModelType[0].id);
     }
-    routerModels.length == 0 && fetchRouterModels();
+    if (routerModels.length == 0) {
+      fetchRouterModels();
+    }
     if (routerModel && routerModels.length > 0) {
       setItemTitle(routerModels.find((item) => item._id === routerModel)?.name || "");
       setMenuId(routerModels.find((item) => item._id === routerModel)?.type || "");
@@ -113,7 +117,7 @@ const DropDownModelMenu = () => {
                 //   mainClassName={`text-white flex flex-col py-3 relative`}
                 //   onClick={() => handleItemClick(subItem._id)}
                 // >
-                  <div className="flex gap-2 items-start cursor-pointer hover:bg-[#ffffff80] focus:bg-[#ffffff80] px-3 py-2 rounded-md" onClick={() => handleItemClick(subItem._id)}>
+                  <div className="flex gap-2 items-start cursor-pointer hover:bg-[#ffffff80] focus:bg-[#ffffff80] px-3 py-2 rounded-md" key={subItem._id} onClick={() => handleItemClick(subItem._id)}>
                     {/* <Image src="/image/logo-chat.png" alt="edith-logo" className="h-[22px] w-auto" width={100} height={22} /> */}
                     <span className="text-[12px] sm:text-[16px] text-nowrap text-white">{subItem.name}</span>
                   </div>

@@ -15,8 +15,8 @@ async function create(errorLog: {
     stack?: string;
     userId?: string;
     userEmail?: string;
-    context?: any;
-    metadata?: any;
+    context?: object;
+    metadata?: object;
 }) {
     return db.ErrorLog.create({
         errorType: errorLog.errorType,

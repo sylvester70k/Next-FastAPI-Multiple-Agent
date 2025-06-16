@@ -8,7 +8,7 @@ import emailjs from "@emailjs/nodejs";
 export async function POST(request: NextRequest) {
     const data = await request.json();
     const { email, password, confirmPassword, name } = data;
-    let { transactionId, userId } = data;
+    let { userId } = data;
 
     // Verify reCAPTCHA
     // const recaptchaToken = getRecaptchaTokenFromRequest(request);
@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
             if (userId) {
                 const jumpUser = await UserRepo.findByJumpUserId(userId);
                 if (jumpUser) {
-                    transactionId = "";
                     userId = "";
                 }
             }
@@ -69,7 +68,7 @@ export async function POST(request: NextRequest) {
             message: url,
         };
 
-        const result = await emailjs.send(
+        await emailjs.send(
             process.env.EMAILJS_SERVICE_ID!,
             process.env.EMAILJS_TEMPLATE_ID!,
             templateParams,

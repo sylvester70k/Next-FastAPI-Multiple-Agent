@@ -5,7 +5,6 @@ import { PanelLeft, Clock, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { ISession } from "@/typings/agent";
-import Cookies from "js-cookie";
 import dayjs from "dayjs";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -31,7 +30,6 @@ const SidebarButton = ({ className, workspaceInfo }: SidebarButtonProps) => {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
-  const deviceId = Cookies.get("device_id") || "";
   const { data: session, status } = useSession();
 
   // Get the current session ID from URL parameters

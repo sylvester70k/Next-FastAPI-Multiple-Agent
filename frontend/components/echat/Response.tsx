@@ -38,10 +38,7 @@ const md = new MarkdownIt({
 const Response = memo((
   {
     response,
-    timestamp,
     last,
-    inputToken = 0,
-    outputToken = 0,
     outputTime = 0,
     chatType,
     fileUrls,

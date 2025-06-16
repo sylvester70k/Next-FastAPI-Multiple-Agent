@@ -132,34 +132,34 @@ const ChatHistory = () => {
         }
     }, [sessionId]);
 
-    const categorizeSessions = (sessions: ChatHistoryType[]) => {
-        const today = moment().startOf('day');
-        const yesterday = moment().subtract(1, 'days').startOf('day');
-        const last7Days = moment().subtract(7, 'days').startOf('day');
-        const last30Days = moment().subtract(30, 'days').startOf('day');
+    // const categorizeSessions = (sessions: ChatHistoryType[]) => {
+    //     const today = moment().startOf('day');
+    //     const yesterday = moment().subtract(1, 'days').startOf('day');
+    //     const last7Days = moment().subtract(7, 'days').startOf('day');
+    //     const last30Days = moment().subtract(30, 'days').startOf('day');
 
-        const categories = {
-            today: [] as ChatHistoryType[],
-            yesterday: [] as ChatHistoryType[],
-            last7Days: [] as ChatHistoryType[],
-            last30Days: [] as ChatHistoryType[],
-        };
+    //     const categories = {
+    //         today: [] as ChatHistoryType[],
+    //         yesterday: [] as ChatHistoryType[],
+    //         last7Days: [] as ChatHistoryType[],
+    //         last30Days: [] as ChatHistoryType[],
+    //     };
 
-        sessions.forEach(session => {
-            const sessionTime = moment(Number(session.chats[session.chats.length - 1].timestamp));
-            if (sessionTime.isSameOrAfter(today)) {
-                categories.today.push(session);
-            } else if (sessionTime.isSameOrAfter(yesterday)) {
-                categories.yesterday.push(session);
-            } else if (sessionTime.isSameOrAfter(last7Days)) {
-                categories.last7Days.push(session);
-            } else if (sessionTime.isSameOrAfter(last30Days)) {
-                categories.last30Days.push(session);
-            }
-        });
+    //     sessions.forEach(session => {
+    //         const sessionTime = moment(Number(session.chats[session.chats.length - 1].timestamp));
+    //         if (sessionTime.isSameOrAfter(today)) {
+    //             categories.today.push(session);
+    //         } else if (sessionTime.isSameOrAfter(yesterday)) {
+    //             categories.yesterday.push(session);
+    //         } else if (sessionTime.isSameOrAfter(last7Days)) {
+    //             categories.last7Days.push(session);
+    //         } else if (sessionTime.isSameOrAfter(last30Days)) {
+    //             categories.last30Days.push(session);
+    //         }
+    //     });
 
-        return categories;
-    };
+    //     return categories;
+    // };
 
     // const categorizedSessions = categorizeSessions(chatHistory.sort((a, b) => Number(b.chats[b.chats.length - 1].timestamp) - Number(a.chats[a.chats.length - 1].timestamp)));
 

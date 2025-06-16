@@ -177,7 +177,7 @@ const SignIn = () => {
           <span>{isLoading.google ? "Signing in with Google..." : "Sign In with Google"}</span>
         </ShadowBtn>
         <div className="flex items-center justify-center mt-4 gap-[2px]">
-          <span className="text-box-fontSub text-sm">Don't have an account?</span>
+          <span className="text-box-fontSub text-sm">Don&apos;t have an account?</span>
           <Link href="/signup" className="text-box-placeholder text-sm underline hover:text-box-placeholder">Sign Up</Link>
         </div>
       </div>

@@ -169,7 +169,7 @@ const AccordionResearchArea = () => {
                     className='py-3 px-3 mb-[2px]'
                 >
                     <div className="flex flex-col gap-3">
-                        {researchLog.map((step, index) => (
+                        {researchLog.map((step) => (
                             step.sources.map((source, index) => (
                                 source.title &&
                                 <div

@@ -139,7 +139,7 @@ const ResearchArea = () => {
                     className='py-3 px-6'
                 >
                     <div className="flex flex-col gap-3">
-                        {researchLog.map((step, index) => (
+                        {researchLog.map((step) => (
                             step.sources.map((source, index) => (
                                 source.title &&
                                 <div

@@ -1,12 +1,10 @@
 "use client"
 
 import { toast } from "sonner";
-import { RegisterProps } from "@/lib/interface";
+// import { RegisterProps } from "@/lib/interface";
 import { User } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { signIn } from "next-auth/react";
@@ -19,17 +17,10 @@ import RockIcon from "@/assets/rock";
 import { validateEmail, validatePassword } from "@/lib/utils";
 import ShadowBtn from "@/components/echat/ShadowBtn";
 import { useSearchParams } from "next/navigation";
-import Cookies from "js-cookie";
 import { Suspense } from "react";
-// import { useRecaptcha } from "@/app/hooks/useRecaptcha";
+import Link from "next/link";
 
 const SignUp = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterProps>({});
-
   const [isLoading, setIsLoading] = useState({
     google: false,
     twitter: false,

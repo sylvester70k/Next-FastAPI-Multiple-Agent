@@ -15,7 +15,7 @@ import Image from "next/image";
 import ChangeLog from "@/assets/changelog";
 import DocsIcon from "@/assets/docs";
 
-const ProfileDropDownMenu = ({ endpoint }: { endpoint: string }) => {
+const ProfileDropDownMenu = () => {
   const router = useRouter();
   const { user } = useAuth();
 

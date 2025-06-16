@@ -21,14 +21,12 @@ import NewChatIcon from "@/assets/newChat";
 import { IFileWithUrl } from "@/lib/interface";
 import { generateSessionId } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { useAuth } from "@/context/AuthContext";
 import DialogModelMenu from "@/components/echat/DialogModelMenu";
 
 const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const endPoint = pathname.split("/");
-  const { user } = useAuth();
 
   const leftSidebarRef = useRef<HTMLDivElement | null>(null);
   const rightSidebarRef = useRef<HTMLDivElement | null>(null);
@@ -217,11 +215,11 @@ const Header = () => {
                         </button>
                       </>
                     }
-                    <ProfileDropDownMenu endpoint={endPoint[1]} />
+                    <ProfileDropDownMenu />
                   </div>
                 </div>
                 <div className="sm:hidden flex items-center gap-2">
-                  <MobileDropDownMenu endpoint={endPoint[1]} />
+                  <MobileDropDownMenu />
                 </div>
               </>
             ) : (

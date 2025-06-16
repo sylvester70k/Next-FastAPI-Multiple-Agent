@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { PlanRepo } from "@/lib/database/planRepo";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const plans = await PlanRepo.findAll();
         return NextResponse.json({ status: true, plans });

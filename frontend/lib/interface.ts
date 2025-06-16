@@ -158,3 +158,13 @@ export interface IChangeLog {
     category: string;
     createdAt: Date;
 }
+
+export interface IBillingHistory {
+    _id: string;
+    plan: string;
+    price: number;
+    status: string;
+    createdAt: Date;
+    invoicePdfUrl: string;
+    type: string;
+}

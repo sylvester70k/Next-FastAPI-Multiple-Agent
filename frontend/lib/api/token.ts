@@ -8,7 +8,7 @@ export async function generateConfirmationToken(email: string, provider = "email
   const token = await new SignJWT({ email, provider })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1h')
+    .setExpirationTime('1d')
     .sign(SECRET_KEY);
 
   return token;

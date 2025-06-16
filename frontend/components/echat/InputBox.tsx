@@ -37,22 +37,6 @@ import { Credits } from "@/lib/stack";
 const TEXTAREA_MIN_HEIGHT = "36px";
 const TEXTAREA_MAX_HEIGHT = "100px";
 
-// Custom Switch component using Tailwind CSS
-const CustomSwitch = ({ checked, onChange, disabled }: { checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; disabled?: boolean }) => {
-  return (
-    <label className="relative inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        className="sr-only peer"
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-      />
-      <div className={`w-7 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
-    </label>
-  );
-};
-
 // Custom Divider component using Tailwind CSS
 const CustomDivider = () => {
   return <div className="h-full w-[2px] bg-[#25252799]" />;
